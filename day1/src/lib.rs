@@ -1,5 +1,5 @@
 /// Return the sum of calibration values.
-pub fn do_day1_prob1(input: &str) -> i32 {
+pub fn do_day1_part1(input: &str) -> i32 {
     let mut total: i32 = 0;
 
     for found in input.split("\n") {
@@ -17,18 +17,18 @@ pub fn do_day1_prob1(input: &str) -> i32 {
 }
 
 #[test]
-fn test_do_day1_prob1() {
+fn test_do_day1_part1() {
     let test_input = "\
 1abc2
 pqr3stu8vwx
 a1b2c3d4e5f
 treb7uchet
 ";
-    assert_eq!(do_day1_prob1(test_input), 142);
+    assert_eq!(do_day1_part1(test_input), 142);
 }
 
 /// Return the sum of calibration values.
-pub fn do_day1_prob2(input: &str) -> i32 {
+pub fn do_day1_part2(input: &str) -> i32 {
     let mut total: i32 = 0;
 
     for found in input.split("\n") {
@@ -71,15 +71,8 @@ pub fn do_day1_prob2(input: &str) -> i32 {
     total
 }
 
-// TODO: make above be do_day1_p1.
-// then add do_day1_prob2.
-// Make a vector of chars.
-// Match if the string startswith any digit or any english spelled word.
-// If so, advance index into string and push found value onto number vector.
-// loop.
-// Test that on new test input.
 #[test]
-fn test_do_day1_prob2() {
+fn test_do_day1_part2() {
     let test_input = "\
 two1nine
 eightwothree
@@ -91,13 +84,13 @@ zoneight234
     let expected = 29 + 83 + 13 + 24 + 42 + 14 + 76;
     
     assert_eq!(281, expected);
-    assert_eq!(do_day1_prob2(test_input), expected);
+    assert_eq!(do_day1_part2(test_input), expected);
 
     
-    assert_eq!(do_day1_prob2("five94rxvhdhqh3three555"), 55);
+    assert_eq!(do_day1_part2("five94rxvhdhqh3three555"), 55);
     
     // Tricky case.
-    assert_eq!(do_day1_prob2("oneight"), 18);
+    assert_eq!(do_day1_part2("oneight"), 18);
 
 }
 

@@ -10,8 +10,8 @@ For example:
 ```
 cd day1
 cargo test
-cargo run prob1 input.txt
-cargo run prob2 input.txt
+cargo run part1 input.txt
+cargo run part2 input.txt
 ```
 
 
