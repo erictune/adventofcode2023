@@ -10,13 +10,18 @@ fn main() {
         println!("Usage: {}  `prob1'|`prob2' FILENAME", args[0]);
         process::exit(1);
     }
-    let _ = match args[1].as_str() {
+    let probnum = match args[1].as_str() {
         "prob1" => Some(1),
+        "prob2" => Some(2),
         _ => None,
     }
     .expect("Usage: <arg0>  `prob1'|`prob2' FILENAME");
     let file_path = &args[2];
     let input = fs::read_to_string(file_path).expect("Should have been able to read the file");
-    let output = day1::do_day1(&input);
+    let output = match probnum {
+        1 => day1::do_day1_prob1(&input),
+        2 => day1::do_day1_prob2(&input),
+        _ => unreachable!(),
+    };
     println!("{}", output)
 }
