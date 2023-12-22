@@ -1,8 +1,15 @@
 use grid::Grid;
 use std::cmp;
+use std::collections::HashMap;
+use std::collections::HashSet;
 
 /// Return the sum of calibration values.
 pub fn do_day3_part1(input: &str) -> i32 {
+    do_day3(input, false)
+}
+
+    /// Return the sum of calibration values.
+pub fn do_day3(input: &str, part2: bool) -> i32 {
 
     let mut lines: Vec<_> = input.split("\n").collect();
     // Fixup last empty string.
@@ -32,26 +39,42 @@ pub fn do_day3_part1(input: &str) -> i32 {
     //  an uncessary improvement would be to avoid checking already-checked locations prior to finding the symbol (overlapping checks).
     //  In either case, a list of offsets for 8-neightbors can used instead of coding all 8 checks.
     let mut attached_partnums: Vec<i32> = vec![];
+    // Stars is keyed by the location of a '*' character.  Its value is a list of adjacent parsed numbers.
+    let mut stars: HashMap<(usize, usize), Vec<i32>> = HashMap::new();
     {
         // Holds value whose digits are being accumulated, or "shifted in".  Once complete: a part number.
         let mut partial_partnum = None;
         // Whether the partial_partnum has been found to be adjacent to a symbol yet.  
         let mut adjacent = false;
-
+        // Stars near the current partial partnumber.
+        let mut local_stars: HashSet<(usize,usize)> = HashSet::new();
         for r in 0..nr {
             for c in 0..nc {
+                // These are stars next to the number we are currently parsing (partial_partnum).
                 match gr[(r, c)] {
                     '@' | '#' | '$' | '%' | '&' | '*' | '-' | '+' | '=' | '/' | '.' => {
                         if partial_partnum.is_some() {
+                            let pn = partial_partnum.unwrap();
                             // Since we encountered a a non-digit, we finish accumlating this part number.
                             // We have previously checked all its neighbors.
                             if adjacent {
-                                attached_partnums.push(partial_partnum.unwrap());
+                                attached_partnums.push(pn);
+                                // We know what stars are next to this (now completely parsed) number;
+                                // Now update our list of numbers that are next to stars.
+                                println!("Local stars: {:?}", local_stars);
+                                for starpos in &local_stars {
+                                    if stars.contains_key(starpos) {
+                                        stars.get_mut(starpos).unwrap().push(pn);
+                                    } else {
+                                        stars.insert(starpos.clone(), vec![pn]);
+                                    }
+                                }
                             } else {
                                 println!("Skipping part number with no adjacenct symbols: {}", partial_partnum.unwrap())
                             }
                             partial_partnum = None;
                             adjacent = false;
+                            local_stars.clear();
                         }
                     }
                     '0'..='9' => {
@@ -63,24 +86,27 @@ pub fn do_day3_part1(input: &str) -> i32 {
                             None => Some(digit),
                             Some(x) => Some(10 * x + digit),
                         };
-                        if !adjacent {
-                            // Check neigbors
-                            // First establish which indicies to check, as this can be different at boundaries.
-                            let rlo = cmp::max(r.saturating_sub(1), 0);
-                            let rhi = cmp::min(r + 1, nr - 1 );
-                            let clo = cmp::max(c.saturating_sub(1), 0);
-                            let chi = cmp::min(c + 1, nc - 1 );
-                            
-                            'nieghb: for rr in rlo..=rhi {
-                                for cc in clo..=chi {
-                                    if match gr[(rr, cc)] { '@' | '#' | '$' | '%' | '&' | '*' | '-' | '+' | '=' | '/'  => true, _ => false } {
-                                        adjacent = true;
-                                        println!("Symbol!: {}", gr[(rr, cc)]);
-                                        break 'nieghb;
-                                    } 
-                                }
-                            } 
-                        }
+                        // Check neigbors
+                        // First establish which indicies to check, as this can be different at boundaries.
+                        let rlo = cmp::max(r.saturating_sub(1), 0);
+                        let rhi = cmp::min(r + 1, nr - 1 );
+                        let clo = cmp::max(c.saturating_sub(1), 0);
+                        let chi = cmp::min(c + 1, nc - 1 );
+                        
+                        for rr in rlo..=rhi {
+                            for cc in clo..=chi {
+                                if match gr[(rr, cc)] { '@' | '#' | '$' | '%' | '&' | '*' | '-' | '+' | '=' | '/'  => true, _ => false } {
+                                    adjacent = true;
+                                    if gr[(rr, cc)]  == '*' {
+                                        // Found a possible gear
+                                        println!("Found a possible gear!");
+                                        local_stars.insert((rr, cc));
+                                    } else {
+                                        println!("Bah, just a {}!", gr[(rr,cc)]);
+                                    }     
+                                } 
+                            }
+                        } 
                     }
                     _ => {
                         panic!("Unexpected character in input: {}", gr[(r, c)])
@@ -89,19 +115,31 @@ pub fn do_day3_part1(input: &str) -> i32 {
             }
             // The end of a line is an automatic end of any in-progress part number.
             if partial_partnum.is_some() {
+                let pn = partial_partnum.unwrap();
                 // Since we encountered a a non-digit, we finish accumlating this part number.
                 // We have previously checked all its neighbors.
                 if adjacent {
-                    attached_partnums.push(partial_partnum.unwrap());
+                    attached_partnums.push(pn);
+                    // We know what stars are next to this (now completely parsed) number;
+                    // Now update our list of numbers that are next to stars.
+                    for starpos in &local_stars {
+                        if stars.contains_key(starpos) {
+                            stars.get_mut(starpos).unwrap().push(pn);
+                        } else {
+                            stars.insert(starpos.clone(), vec![pn]);
+                        }
+                    }
                 } else {
                     println!("Skipping part number with no adjacenct symbols: {}", partial_partnum.unwrap())
                 }
                 partial_partnum = None;
                 adjacent = false;
+                local_stars.clear();
             }
         }
     }
     println!("Attached part numbers: {:?}", attached_partnums);
+    println!("Stars: {:?}", stars);
     // If we aren't in the state of parsing a number...
     // ... and we see a number, then start parsing,
     //     by pushing that number onto a stack or what have you
@@ -113,7 +151,15 @@ pub fn do_day3_part1(input: &str) -> i32 {
     //     and check above and below for symbols, marking as "by_symbol" if any is found.
     // ... as we see anything else - we ended the number, check above here and below, then parse the number and accumulate.
 
-    attached_partnums.iter().sum()
+    if part2 {
+        stars
+            .iter()
+            .filter(|x| (*x).1.len() == 2)
+            .map(|x| x.1.iter().product::<i32>())
+            .sum()
+    } else {
+        attached_partnums.iter().sum()
+    }
 }
 
 #[test]
@@ -133,9 +179,8 @@ fn test_do_day3_part1() {
 }
 
 /// Return the sum of calibration values.
-pub fn do_day3_part2(_input: &str) -> i32 {
-    let total: i32 = 0;
-    total
+pub fn do_day3_part2(input: &str) -> i32 {
+    do_day3(input, true)
 }
 
 #[test]
@@ -151,7 +196,8 @@ fn test_do_day3_part2() {
 ......755.
 ...$.*....
 .664.598..";
-    assert_eq!(do_day3_part2(test_input), 223452345);
+    assert_eq!(467835, 467*35 + 755*598);
+    assert_eq!(do_day3_part2(test_input), 467*35 + 755*598);
 }
 
 
